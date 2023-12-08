@@ -1,0 +1,24 @@
+{
+  "name": "bike_share_voronoi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/valentecaio/bike-share-voronoi.git"
+  },
+  "author": "valentecaio",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/valentecaio/bike-share-voronoi/issues"
+  },
+  "homepage": "https://github.com/valentecaio/bike-share-voronoi#readme",
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "vite": "^5.0.7"
+  }
+}
