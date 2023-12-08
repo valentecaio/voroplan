@@ -19,6 +19,7 @@
   "homepage": "https://github.com/valentecaio/bike-share-voronoi#readme",
   "dependencies": {
     "csv-parser": "^3.0.0",
+    "d3-voronoi": "^1.1.4",
     "leaflet": "^1.9.4",
     "papa": "^0.0.0",
     "vite": "^5.0.7"
