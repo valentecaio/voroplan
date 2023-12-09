@@ -66,14 +66,15 @@ function loadStations(dataset) {
 }
 
 function loadConstraints() {
-  let callback = (data) => {
+  loadJSON(dataset_constraints, (data) => {
     const map_func = (point) => [point.lat, point.lng];
     data.outer = data.outer.map(map_func);
     data.inner = data.inner.map((polygon) => polygon.map(map_func));
+    closePolygon(data.outer);
+    data.inner.forEach(closePolygon);
     constraints = data
     redraw();
-  }
-  loadJSON(dataset_constraints, callback);
+  });
 }
 
 
@@ -110,8 +111,8 @@ function onMapClick(e) {
 }
 
 // add a polygon to the map
-function addPolygon(polygon, color, fill) {
-  const latLngs = polygon.map(point => L.latLng(point[0], point[1]));
+function addPolygon(points, color, fill) {
+  const latLngs = points.map(point => L.latLng(point[0], point[1]));
   L.polygon(latLngs, {color: color, fill: fill, fillOpacity: 0.3}).addTo(map);
 }
 
@@ -136,8 +137,9 @@ function addMarker(point) {
 // recalculate and redraw data on the map
 function redraw() {
   // recalculate
+  applyConstraintsOnPoints();
   voronoi();
-  applyConstraints();
+  applyConstraintsOnVoronoi();
 
   // map cleanup
   layer_stations.clearLayers();
@@ -160,7 +162,7 @@ function redraw() {
 
   // draw points
   stations.forEach(point => {
-    // addMarker(point);
+    addMarker(point);
   });
 }
 
@@ -173,10 +175,19 @@ function voronoi() {
   const positions = stations.map(point => [point.lat, point.lng]);
   const voronoiDiagram = voronoiLayout(positions);
   voronoiPolygons = voronoiDiagram.polygons().map(polygon => polygon.filter(point => point !== null));
+  voronoiPolygons.forEach(closePolygon);
+}
+
+// remove points that are outside the outer constraint or inside an inner constraint
+function applyConstraintsOnPoints() {
+  stations = stations.filter(point => pointInPolygon(point, constraints.outer));
+  constraints.inner.forEach(polygon => {
+    stations = stations.filter(point => !pointInPolygon(point, polygon));
+  });
 }
 
 // apply constraints to the voronoi polygons
-function applyConstraints() {
+function applyConstraintsOnVoronoi() {
   // remove voronoi polygons outside the outer constraint
   for (let i = 0; i < voronoiPolygons.length; i++) {
     const new_polygon = polygonIntersection(voronoiPolygons[i], constraints.outer);
@@ -196,34 +207,34 @@ function applyConstraints() {
 }
 
 // add the first point to the end of the polygon if necessary
-function closePolygons(polygons) {
-  polygons.forEach(polygon => {
-    if (polygon[0] !== polygon[polygon.length - 1]) {
-      polygon.push(polygon[0]);
-    }
-  });
+function closePolygon(polygon) {
+  if (polygon[0] !== polygon[polygon.length - 1]) {
+    polygon.push(polygon[0]);
+  }
 }
 
 // create turf polygons from arrays
-function createTurfPolygons(polygon1, polygon2) {
-  let tpolygon1 = turf.polygon([polygon1]);
-  let tpolygon2 = turf.polygon([polygon2]);
+function createTurfPolygons(polygons) {
+  let tpolygons = [];
+  polygons.forEach(polygon => {
+    tpolygons.push(turf.polygon([polygon]));
+  });
 
   // validate polygon orientation
-  turf.booleanClockwise(tpolygon1.geometry.coordinates[0]) || tpolygon1.geometry.coordinates[0].reverse();
-  turf.booleanClockwise(tpolygon2.geometry.coordinates[0]) || tpolygon2.geometry.coordinates[0].reverse();
+  tpolygons.forEach(tpolygon => {
+    turf.booleanClockwise(tpolygon.geometry.coordinates[0]) || tpolygon.geometry.coordinates[0].reverse();
+  });
 
-  return [tpolygon1, tpolygon2];
+  return tpolygons;
 }
 
 // removes the intersection of the polygon2 in polygon1. Returns a new polygon
 function removeIntersection(polygon1, polygon2) {
-  closePolygons([polygon1, polygon2]);
-  if (polygon1.length < 3 || polygon2.length < 3) {
+  if (polygon1.length < 4 || polygon2.length < 4) {
     return;
   }
 
-  let [tpolygon1, tpolygon2] = createTurfPolygons(polygon1, polygon2);
+  let [tpolygon1, tpolygon2] = createTurfPolygons([polygon1, polygon2]);
 
   // removes the intersection of the polygon2 in polygon1
   const intersection = turf.intersect(tpolygon1, tpolygon2);
@@ -232,18 +243,22 @@ function removeIntersection(polygon1, polygon2) {
 
 // returns a new polygon with the intersection of the polygon1 in polygon2
 function polygonIntersection(polygon1, polygon2) {
-  closePolygons([polygon1, polygon2]);
-  if (polygon1.length < 3 || polygon2.length < 3) {
+  if (polygon1.length < 4 || polygon2.length < 4) {
     return;
   }
 
-  let [tpolygon1, tpolygon2] = createTurfPolygons(polygon1, polygon2);
+  let [tpolygon1, tpolygon2] = createTurfPolygons([polygon1, polygon2]);
 
   // returns the intersection of the polygon1 in polygon2
   const intersection = turf.intersect(tpolygon1, tpolygon2);
   return (intersection != null) ? intersection.geometry.coordinates[0] : [];
 }
 
+function pointInPolygon(point, polygon) {
+  const [tpolygon] = createTurfPolygons([polygon]);
+  const tpoint = turf.point([point.lat, point.lng]);
+  return turf.booleanPointInPolygon(tpoint, tpolygon);
+}
 
 
 /****** MAIN ******/
