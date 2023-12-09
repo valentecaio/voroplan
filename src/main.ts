@@ -9,6 +9,7 @@ import { VoronoiLayout } from 'd3-voronoi';
 const dataset = 'bike';
 const dataset_metro = 'dataset/rio_metro.csv';
 const dataset_bike = 'https://riodejaneiro.publicbikesystem.net/customer/ube/gbfs/v1/en/station_information';
+const dataset_constraints = 'dataset/rio_constraints.json';
 const map_position = [-22.9668, -43.2029]; // Rio de Janeiro South Zone
 
 // globals
@@ -38,7 +39,7 @@ function loadJSON(path, callback) {
 async function loadRemoteJSON(url, callback) {
   try {
     const json = await fetchJSON(url);
-    callback(json['data']['stations']);
+    callback(json.data.stations);
   } catch (error) {
     console.log('Error:', error);
   }
@@ -50,9 +51,9 @@ function loadStations(dataset) {
     console.log('Loaded data:', data);
     data.forEach((station) => {
       stations.push({
-        name: station['name'],
-        lat: station['lat'],
-        lng: station['lon'] != null ? station['lon'] : station['lng']
+        name: station.name,
+        lat:  station.lat,
+        lng:  station.lon != null ? station.lon : station.lng
       });
     });
     redraw();
@@ -66,13 +67,13 @@ function loadStations(dataset) {
 
 function loadConstraints() {
   let callback = (data) => {
-    const map_func = (point) => [point['lat'], point['lng']];
-    data['outer'] = data['outer'].map(map_func);
-    data['inner'] = data['inner'].map((polygon) => polygon.map(map_func));
+    const map_func = (point) => [point.lat, point.lng];
+    data.outer = data.outer.map(map_func);
+    data.inner = data.inner.map((polygon) => polygon.map(map_func));
     constraints = data
     redraw();
   }
-  loadJSON('dataset/rio_constraints.json', callback);
+  loadJSON(dataset_constraints, callback);
 }
 
 
@@ -92,7 +93,7 @@ function init() {
   voronoiLayout = d3.voronoi();
 
   // globals
-  constraints = {'outer': [], 'inner': []};
+  constraints = {outer: [], inner: []};
 }
 
 // callback for map click: create station marker and redraw voronoi
@@ -152,8 +153,8 @@ function redraw() {
   });
 
   // draw constraint polygons
-  if (constraints['outer']) {
-    addPolygon(constraints['outer'], 'red', false);
+  if (constraints.outer) {
+    addPolygon(constraints.outer, 'red', false);
   }
   constraints.inner.forEach(polygon => { addPolygon(polygon, 'red', true); });
 
