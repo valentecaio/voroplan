@@ -1,11 +1,12 @@
-import { parseCSV } from './utils';
+import { parseCSV, fetchJSON } from './utils';
 
 import * as L from 'leaflet';
 import * as d3 from 'd3-voronoi';
 import { VoronoiLayout } from 'd3-voronoi';
 
 // constants
-const csvFilePath = 'dataset/rio_bikes.csv';
+const csvFilePath = 'dataset/rio_metro.csv';
+const jsonURL = 'https://riodejaneiro.publicbikesystem.net/customer/ube/gbfs/v1/en/station_information';
 const position = [-22.9668, -43.2029]; // Rio de Janeiro South Zone
 
 // globals
@@ -28,6 +29,9 @@ function init() {
 
   // d3
   voronoiLayout = d3.voronoi();
+
+  // globals
+  points = [];
 }
 
 function loadPoints() {
@@ -41,6 +45,21 @@ function loadPoints() {
     .catch((error) => {
       console.log('Error parsing CSV:', error)
     });
+}
+
+async function loadPoints2() {
+  try {
+    const json = await fetchJSON(jsonURL);
+    const stations = json['data']['stations'];
+    stations.forEach(station => {
+      points.push({lat: station['lat'], lng: station['lon']});
+    });
+    console.log(points)
+    voronoi();
+    redraw();
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
 }
 
 // callback for map click: add a marker and redraw voronoi
@@ -112,5 +131,5 @@ function redraw() {
 }
 
 init();
-loadPoints();
-
+// loadPoints();
+loadPoints2();
