@@ -111,7 +111,7 @@ function onMapClick(e) {
 // add a polygon to the map
 function addPolygon(polygon, color, fill) {
   const latLngs = polygon.map(point => L.latLng(point[0], point[1]));
-  L.polygon(latLngs, {color: color, fill: fill, fillOpacity: 0.5}).addTo(map);
+  L.polygon(latLngs, {color: color, fill: fill, fillOpacity: 0.3}).addTo(map);
 }
 
 // add a station point to the map
@@ -176,6 +176,12 @@ function voronoi() {
 
 // apply constraints to the voronoi polygons
 function applyConstraints() {
+  // remove voronoi polygons outside the outer constraint
+  for (let i = 0; i < voronoiPolygons.length; i++) {
+    const new_polygon = polygonIntersection(voronoiPolygons[i], constraints.outer);
+    voronoiPolygons[i] = new_polygon ? new_polygon : voronoiPolygons[i];
+  }
+
   // remove intersections of inner constraints in voronoi polygons
   for (let i = 0; i < voronoiPolygons.length; i++) {
     for (let j = 0; j < constraints.inner.length; j++) {
@@ -183,23 +189,22 @@ function applyConstraints() {
       voronoiPolygons[i] = new_polygon ? new_polygon : voronoiPolygons[i];
     }
   }
+
+  // remove null polygons
+  voronoiPolygons = voronoiPolygons.filter(polygon => polygon && polygon.length > 0);
 }
 
-// removes the intersection of the polygon2 in polygon1. Returns a new polygon
-function removeIntersection(polygon1, polygon2) {
-  if (polygon1.length < 3 || polygon2.length < 3) {
-    return;
-  }
+// add the first point to the end of the polygon if necessary
+function closePolygons(polygons) {
+  polygons.forEach(polygon => {
+    if (polygon[0] !== polygon[polygon.length - 1]) {
+      polygon.push(polygon[0]);
+    }
+  });
+}
 
-  // close polygons if necessary
-  if (polygon1[0] !== polygon1[polygon1.length - 1]) {
-    polygon1.push(polygon1[0]);
-  }
-  if (polygon2[0] !== polygon2[polygon2.length - 1]) {
-    polygon2.push(polygon2[0]);
-  }
-
-  // convert to turf format
+// create turf polygons from arrays
+function createTurfPolygons(polygon1, polygon2) {
   let tpolygon1 = turf.polygon([polygon1]);
   let tpolygon2 = turf.polygon([polygon2]);
 
@@ -207,12 +212,37 @@ function removeIntersection(polygon1, polygon2) {
   turf.booleanClockwise(tpolygon1.geometry.coordinates[0]) || tpolygon1.geometry.coordinates[0].reverse();
   turf.booleanClockwise(tpolygon2.geometry.coordinates[0]) || tpolygon2.geometry.coordinates[0].reverse();
 
+  return [tpolygon1, tpolygon2];
+}
+
+// removes the intersection of the polygon2 in polygon1. Returns a new polygon
+function removeIntersection(polygon1, polygon2) {
+  closePolygons([polygon1, polygon2]);
+  if (polygon1.length < 3 || polygon2.length < 3) {
+    return;
+  }
+
+  let [tpolygon1, tpolygon2] = createTurfPolygons(polygon1, polygon2);
+
   // removes the intersection of the polygon2 in polygon1
   const intersection = turf.intersect(tpolygon1, tpolygon2);
-  if (intersection != null) {
-    return turf.difference(tpolygon1, intersection).geometry.coordinates[0];
-  }
+  return (intersection != null) ? turf.difference(tpolygon1, intersection).geometry.coordinates[0] : polygon1;
 }
+
+// returns a new polygon with the intersection of the polygon1 in polygon2
+function polygonIntersection(polygon1, polygon2) {
+  closePolygons([polygon1, polygon2]);
+  if (polygon1.length < 3 || polygon2.length < 3) {
+    return;
+  }
+
+  let [tpolygon1, tpolygon2] = createTurfPolygons(polygon1, polygon2);
+
+  // returns the intersection of the polygon1 in polygon2
+  const intersection = turf.intersect(tpolygon1, tpolygon2);
+  return (intersection != null) ? intersection.geometry.coordinates[0] : [];
+}
+
 
 
 /****** MAIN ******/
