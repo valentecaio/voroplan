@@ -130,17 +130,15 @@ function update() {
 // load stations data from csv or json
 function loadStations() {
   let callback = (data) => {
-    // console.log('Loaded data:', data);
-    data.forEach((station) => {
-      stations.push({
+    stations = data.map((station) => {
+      return {
         name: station.name,
         lat:  station.lat,
         lng:  station.lon != null ? station.lon : station.lng
-      });
+      };
     });
     update();
   }
-  stations = [];
   if (dataset === 'metro') {
     utils.loadCSV(dataset_metro, callback);
   } else if (dataset === 'bike') {
@@ -150,11 +148,13 @@ function loadStations() {
 
 function loadConstraints() {
   utils.loadJSON(dataset_constraints, (data) => {
-    data.outer = gutils.latLngToArray(data.outer);
-    data.inner = data.inner.map(gutils.latLngToArray);
-    gutils.polygonClose(data.outer);
-    data.inner.forEach(gutils.polygonClose);
-    constraints = data
+    constraints = {
+      outer: gutils.latLngToArray(data.outer),
+      inner: data.inner.map(gutils.latLngToArray)
+    }
+    // close polygons
+    gutils.polygonClose(constraints.outer);
+    constraints.inner.forEach(gutils.polygonClose);
     update();
   });
 }
@@ -163,7 +163,7 @@ function loadConstraints() {
 
 /*************************
  *
- * MAP MANIPULATION
+ * MAP RENDERING
  *
  *************************/
 
