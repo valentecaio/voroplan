@@ -186,6 +186,7 @@ function addPolygon(points, color, fill) {
 // add a station point to the map
 function addMarker(point) {
   const marker = L.marker([point.lat, point.lng], {draggable: true});
+  marker.bindPopup(point.name ? point.name : 'Custom station');
   marker.addTo(layer_stations);
 
   // started to drag: save marker position
@@ -198,6 +199,11 @@ function addMarker(point) {
     const index = stations.findIndex(p => gutils.pointsEqual(p, dragStart));
     stations[index] = e.target.getLatLng();
     update();
+  });
+
+  // show station name on hover
+  marker.on('mouseover', function () {
+    this.openPopup();
   });
 }
 
