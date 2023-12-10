@@ -16,9 +16,9 @@ import { Delaunay } from 'd3-delaunay';
 
 // compute voronoi using d3-delaunay: faster and more robust
 export function voronoi(points, boundPolygon) {
-  const bounds = boundingBox(boundPolygon).flat(); // d3-delaunay requires a flat array
+  const bounds = boundingBox(boundPolygon);
   const delaunay = Delaunay.from(latLngToArray(points));
-  const voronoiDiagram = delaunay.voronoi(bounds);
+  const voronoiDiagram = delaunay.voronoi(bounds.flat()); // d3-delaunay requires a flat array
   const polygons = [];
   for (const polygon of voronoiDiagram.cellPolygons()) {
     if (polygon) {
@@ -26,7 +26,7 @@ export function voronoi(points, boundPolygon) {
     }
   }
   polygons.forEach(polygonClose);
-  return polygons;
+  return [polygons, bounds];
 }
 
 // old method, compute voronoi using d3-voronoi
@@ -36,7 +36,7 @@ export function voronoi2(points, boundPolygon) {
   const voronoiDiagram = voronoiLayout(latLngToArray(points));
   const polygons = voronoiDiagram.polygons().map(polygon => polygon.filter(point => point !== null));
   polygons.forEach(polygonClose);
-  return polygons;
+  return [polygons, bounds];
 }
 
 
@@ -98,6 +98,16 @@ export function boundingBox(polygon) {
   return [
     [minLat, minLng],
     [maxLat, maxLng]
+  ];
+}
+
+export function polygonFromBounds(bounds) {
+  return [
+    [bounds[0][0], bounds[0][1]],
+    [bounds[1][0], bounds[0][1]],
+    [bounds[1][0], bounds[1][1]],
+    [bounds[0][0], bounds[1][1]],
+    [bounds[0][0], bounds[0][1]]
   ];
 }
 

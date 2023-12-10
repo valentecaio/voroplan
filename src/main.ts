@@ -48,7 +48,7 @@ function createStation(name: string, lat: number, lng: number, icon: string): St
 
 function init() {
   // leaflet init
-  map = L.map('map').setView(map_position, 15);
+  map = L.map('map').setView(map_position, 14);
   layer_stations = L.layerGroup().addTo(map);
 
   // callback for map click: create station marker and redraw voronoi
@@ -100,12 +100,13 @@ function update() {
   }
 
   // recalculate
+  let bounds;
   if (boolConstraints) {
     applyConstraintsToPoints();
-    voronoiPolygons = gutils.voronoi(stations, constraints.outer);
+    [voronoiPolygons, bounds] = gutils.voronoi(stations, constraints.outer);
     applyConstraintsToVoronoi();
   } else {
-    voronoiPolygons = gutils.voronoi(stations, stations);
+    [voronoiPolygons, bounds] = gutils.voronoi(stations, stations);
   }
 
   // map cleanup
@@ -121,13 +122,17 @@ function update() {
     addPolygon(polygon, 'blue', false);
   });
 
-  // draw constraint polygons
+  // draw internal constraints
   if (boolConstraints) {
     if (constraints.outer) {
       addPolygon(constraints.outer, 'red', false);
     }
-    constraints.inner.forEach(polygon => { addPolygon(polygon, 'red', true); });
+    constraints.inner.forEach(polygon => addPolygon(polygon, 'red', true));
   }
+
+  // draw the "infinite" bounding polygon of the voronoi diagram
+  const boundsPolygon = gutils.polygonFromBounds(bounds);
+  addPolygon(boundsPolygon, 'green', false);
 
   // draw points
   if (boolMarkers) {
@@ -204,7 +209,6 @@ function addMarker(point) {
     iconSize: [25, 41],
   });
   const marker = L.marker([point.lat, point.lng], {draggable: true, icon: icon});
-  marker.bindPopup(point.name);
   marker.addTo(layer_stations);
 
   // started to drag: save marker position
@@ -222,6 +226,7 @@ function addMarker(point) {
   });
 
   // show station name on hover
+  marker.bindPopup(point.name);
   marker.on('mouseover', function () {
     this.openPopup();
   });
