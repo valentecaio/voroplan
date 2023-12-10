@@ -34,9 +34,10 @@ function init() {
 
   // callback for map click: create station marker and redraw voronoi
   map.on('click', (e) => {
-    stations.push(e.latlng);
-    update();
-
+    if (showMarkers) {
+      stations.push(e.latlng);
+      update();
+    }
     // hack to get the clicked points in json format, useful to create datasets
     // clicked.push(e.latlng);
     // const jsonContent = JSON.stringify(clicked, null, 2);
@@ -73,9 +74,9 @@ function init() {
 // recalculate and redraw data on the map
 function update() {
   // recalculate
-  applyConstraintsOnPoints();
+  applyConstraintsToPoints();
   voronoiPolygons = gutils.voronoi(stations);
-  applyConstraintsOnVoronoi();
+  applyConstraintsToVoronoi();
 
   // map cleanup
   layer_stations.clearLayers();
@@ -195,7 +196,7 @@ function addMarker(point) {
  *************************/
 
 // remove points that are outside the outer constraint or inside an inner constraint
-function applyConstraintsOnPoints() {
+function applyConstraintsToPoints() {
   if (constraints.outer.length == 0) return; // skip if the outer constraint was not initialized
   stations = stations.filter(point => gutils.pointInPolygon(point, constraints.outer));
   constraints.inner.forEach(polygon => {
@@ -204,8 +205,8 @@ function applyConstraintsOnPoints() {
 }
 
 // apply constraints to the voronoi polygons
-function applyConstraintsOnVoronoi() {
-  // remove voronoi polygons outside the outer constraint
+function applyConstraintsToVoronoi() {
+  // remove parts of voronoi polygons outside the outer constraint
   for (let i = 0; i < voronoiPolygons.length; i++) {
     const new_polygon = gutils.polygonIntersection(voronoiPolygons[i], constraints.outer);
     voronoiPolygons[i] = new_polygon ? new_polygon : voronoiPolygons[i];
@@ -218,9 +219,6 @@ function applyConstraintsOnVoronoi() {
       voronoiPolygons[i] = new_polygon ? new_polygon : voronoiPolygons[i];
     }
   }
-
-  // remove null polygons
-  voronoiPolygons = voronoiPolygons.filter(polygon => polygon && polygon.length > 0);
 }
 
 
