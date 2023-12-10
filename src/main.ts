@@ -24,6 +24,24 @@ let dataset = 'bike';              // current dataset
 
 /*************************
  *
+ * DATA STRUCTURES
+ *
+ *************************/
+
+interface Station {
+  name: string;  // station name
+  icon: string;  // icon color
+  lat: number;   // latitude
+  lng: number;   // longitude
+}
+function createStation(name: string, lat: number, lng: number, icon: string): Station {
+  return {name, lat, lng, icon};
+}
+
+
+
+/*************************
+ *
  * INIT AND UPDATE
  *
  *************************/
@@ -36,7 +54,7 @@ function init() {
   // callback for map click: create station marker and redraw voronoi
   map.on('click', (e) => {
     if (boolMarkers) {
-      stations.push(e.latlng);
+      stations.push(createStation('new station', e.latlng.lat, e.latlng.lng, 'red'));
       update();
     }
     // hack to get the clicked points in json format, useful to create datasets
@@ -131,11 +149,7 @@ function update() {
 function loadStations() {
   let callback = (data) => {
     stations = data.map((station) => {
-      return {
-        name: station.name,
-        lat:  station.lat,
-        lng:  station.lon != null ? station.lon : station.lng
-      };
+      return createStation(station.name, station.lat, station.lng != null ? station.lng : station.lon, 'blue');
     });
     update();
   }
@@ -185,8 +199,12 @@ function addPolygon(points, color, fill) {
 
 // add a station point to the map
 function addMarker(point) {
-  const marker = L.marker([point.lat, point.lng], {draggable: true});
-  marker.bindPopup(point.name ? point.name : 'Custom station');
+  const icon = new L.Icon({
+    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${point.icon}.png`,
+    iconSize: [25, 41],
+  });
+  const marker = L.marker([point.lat, point.lng], {draggable: true, icon: icon});
+  marker.bindPopup(point.name);
   marker.addTo(layer_stations);
 
   // started to drag: save marker position
@@ -197,13 +215,25 @@ function addMarker(point) {
   // stoped to drag: update marker position and redraw voronoi
   marker.on('dragend', (e) => {
     const index = stations.findIndex(p => gutils.pointsEqual(p, dragStart));
-    stations[index] = e.target.getLatLng();
+    stations[index].lat = e.target.getLatLng().lat;
+    stations[index].lng = e.target.getLatLng().lng;
+    stations[index].icon = (stations[index].icon !== 'red') ? 'orange' : 'red';
     update();
   });
 
   // show station name on hover
   marker.on('mouseover', function () {
     this.openPopup();
+  });
+  marker.on('mouseout', function () {
+    this.closePopup();
+  });
+
+  // click on marker to remove station
+  marker.on('click', (e) => {
+    const index = stations.findIndex(p => gutils.pointsEqual(p, e.target.getLatLng()));
+    stations.splice(index, 1);
+    update();
   });
 }
 
