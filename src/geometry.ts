@@ -1,8 +1,35 @@
-// this module contains functions to manipulate polygons and points
+/*************************
+ *
+ * this module contains geometric functions to manipulate polygons and points
+ *
+ *************************/
 
 import * as gutils from './geometry';
 import * as turf from '@turf/turf';
 import * as d3 from 'd3-voronoi';
+
+
+/*************************
+ *
+ * VORONOI
+ *
+ *************************/
+
+export function voronoi(points) {
+  const voronoiLayout = d3.voronoi();
+  const positions = points.map(point => [point.lat, point.lng]);
+  const voronoiDiagram = voronoiLayout(positions);
+  const polygons = voronoiDiagram.polygons().map(polygon => polygon.filter(point => point !== null));
+  polygons.forEach(gutils.polygonClose);
+  return polygons;
+}
+
+
+/*************************
+ *
+ * GENERAL GEOMETRY
+ *
+ *************************/
 
 // create turf polygons from arrays
 function createTurfPolygons(polygons) {
@@ -62,17 +89,3 @@ export function pointInPolygon(point, polygon) {
   return turf.booleanPointInPolygon(tpoint, tpolygon);
 }
 
-
-
-/****** VORONOI ******/
-
-
-// calculate voronoi polygons
-export function voronoi(points) {
-  const voronoiLayout = d3.voronoi();
-  const positions = points.map(point => [point.lat, point.lng]);
-  const voronoiDiagram = voronoiLayout(positions);
-  const polygons = voronoiDiagram.polygons().map(polygon => polygon.filter(point => point !== null));
-  polygons.forEach(gutils.polygonClose);
-  return polygons;
-}

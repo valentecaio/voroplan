@@ -1,5 +1,8 @@
-// this module contains utility functions for loading data
-
+/*************************
+ *
+ * this module contains utility functions for loading data
+ *
+ *************************/
 
 export async function parseCSV(url) {
   try {
