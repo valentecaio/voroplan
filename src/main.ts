@@ -77,6 +77,10 @@ function init() {
 
 // recalculate and redraw data on the map
 function update() {
+  if (stations == null || stations.length == 0) {
+    return;
+  }
+
   // recalculate
   if (boolConstraints) {
     applyConstraintsToPoints();
@@ -146,9 +150,8 @@ function loadStations() {
 
 function loadConstraints() {
   utils.loadJSON(dataset_constraints, (data) => {
-    const map_func = (point) => [point.lat, point.lng];
-    data.outer = data.outer.map(map_func);
-    data.inner = data.inner.map((polygon) => polygon.map(map_func));
+    data.outer = gutils.latLngToArray(data.outer);
+    data.inner = data.inner.map(gutils.latLngToArray);
     gutils.polygonClose(data.outer);
     data.inner.forEach(gutils.polygonClose);
     constraints = data
@@ -176,13 +179,13 @@ function addButton(label, callback) {
 
 // add a polygon to the map
 function addPolygon(points, color, fill) {
-  const latLngs = points.map(point => L.latLng(point[0], point[1]));
+  const latLngs = points.map(p => L.latLng(p[0], p[1]));
   L.polygon(latLngs, {color: color, fill: fill, fillOpacity: 0.3}).addTo(map);
 }
 
 // add a station point to the map
 function addMarker(point) {
-  const marker = L.marker([point.lat, point.lng], { draggable: true });
+  const marker = L.marker([point.lat, point.lng], {draggable: true});
   marker.addTo(layer_stations);
 
   // started to drag: save marker position
@@ -192,7 +195,7 @@ function addMarker(point) {
 
   // stoped to drag: update marker position and redraw voronoi
   marker.on('dragend', (e) => {
-    const index = stations.findIndex(p => (p.lat == dragStart.lat) && (p.lng == dragStart.lng));
+    const index = stations.findIndex(p => gutils.pointsEqual(p, dragStart));
     stations[index] = e.target.getLatLng();
     update();
   });

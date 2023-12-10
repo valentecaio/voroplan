@@ -4,10 +4,9 @@
  *
  *************************/
 
-import * as gutils from './geometry';
 import * as turf from '@turf/turf';
 import * as d3 from 'd3-voronoi';
-
+import { Delaunay } from 'd3-delaunay';
 
 /*************************
  *
@@ -15,13 +14,28 @@ import * as d3 from 'd3-voronoi';
  *
  *************************/
 
+// compute voronoi using d3-delaunay: faster and more robust
 export function voronoi(points, boundPolygon) {
-  const extent = boundingBox(boundPolygon);
-  const voronoiLayout = d3.voronoi().extent(extent);
-  const positions = points.map(point => [point.lat, point.lng]);
-  const voronoiDiagram = voronoiLayout(positions);
+  const bounds = boundingBox(boundPolygon).flat(); // d3-delaunay requires a flat array
+  const delaunay = Delaunay.from(latLngToArray(points));
+  const voronoiDiagram = delaunay.voronoi(bounds);
+  const polygons = [];
+  for (const polygon of voronoiDiagram.cellPolygons()) {
+    if (polygon) {
+      polygons.push(polygon);
+    }
+  }
+  polygons.forEach(polygonClose);
+  return polygons;
+}
+
+// old method, compute voronoi using d3-voronoi
+export function voronoi2(points, boundPolygon) {
+  const bounds = boundingBox(boundPolygon);
+  const voronoiLayout = d3.voronoi().extent(bounds);
+  const voronoiDiagram = voronoiLayout(latLngToArray(points));
   const polygons = voronoiDiagram.polygons().map(polygon => polygon.filter(point => point !== null));
-  polygons.forEach(gutils.polygonClose);
+  polygons.forEach(polygonClose);
   return polygons;
 }
 
@@ -48,6 +62,23 @@ function createTurfPolygons(polygons) {
   });
 
   return tpolygons;
+}
+
+// convert lat/lng points to arrays of coordinates
+export function latLngToArray(points) {
+  return points.map(point => [point.lat, point.lng]);
+}
+
+ // compare two points
+export function pointsEqual(point1, point2) {
+  if (point1 == null || point2 == null) {
+    return false;
+  }
+  const p1lat = point1.lat != null ? point1.lat : point1[0];
+  const p1lng = point1.lng != null ? point1.lng : point1[1];
+  const p2lat = point2.lat != null ? point2.lat : point2[0];
+  const p2lng = point2.lng != null ? point2.lng : point2[1];
+  return p1lat === p2lat && p1lng === p2lng;
 }
 
 // returns the bounding box of a list of points (or a polygon)
