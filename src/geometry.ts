@@ -15,8 +15,9 @@ import * as d3 from 'd3-voronoi';
  *
  *************************/
 
-export function voronoi(points) {
-  const voronoiLayout = d3.voronoi();
+export function voronoi(points, boundPolygon) {
+  const extent = boundingBox(boundPolygon);
+  const voronoiLayout = d3.voronoi().extent(extent);
   const positions = points.map(point => [point.lat, point.lng]);
   const voronoiDiagram = voronoiLayout(positions);
   const polygons = voronoiDiagram.polygons().map(polygon => polygon.filter(point => point !== null));
@@ -47,6 +48,26 @@ function createTurfPolygons(polygons) {
   });
 
   return tpolygons;
+}
+
+// returns the bounding box of a list of points (or a polygon)
+export function boundingBox(polygon) {
+  let minLat = Infinity;
+  let minLng = Infinity;
+  let maxLat = -Infinity;
+  let maxLng = -Infinity;
+
+  polygon.forEach(point => {
+    minLat = Math.min(minLat, point.lat != null ? point.lat : point[0]);
+    minLng = Math.min(minLng, point.lng != null ? point.lng : point[1]);
+    maxLat = Math.max(maxLat, point.lat != null ? point.lat : point[0]);
+    maxLng = Math.max(maxLng, point.lng != null ? point.lng : point[1]);
+  });
+
+  return [
+    [minLat, minLng],
+    [maxLat, maxLng]
+  ];
 }
 
 // add the first point to the end of the polygon if necessary
