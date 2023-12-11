@@ -1,5 +1,5 @@
 {
-  "name": "bike_share_voronoi",
+  "name": "voroplan",
   "version": "1.0.0",
   "description": "",
   "main": "index.html",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/valentecaio/bike-share-voronoi.git"
+    "url": "git+https://github.com/valentecaio/voroplan.git"
   },
   "author": "valentecaio",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/valentecaio/bike-share-voronoi/issues"
+    "url": "https://github.com/valentecaio/voroplan/issues"
   },
-  "homepage": "https://github.com/valentecaio/bike-share-voronoi#readme",
+  "homepage": "https://github.com/valentecaio/voroplan#readme",
   "dependencies": {
     "@turf/turf": "^6.5.0",
     "csv-parser": "^3.0.0",
