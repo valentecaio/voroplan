@@ -142,6 +142,7 @@ export function polygonIntersection(polygon1, polygon2) {
 
   // returns the intersection of the polygon1 in polygon2
   const intersection = turf.intersect(tpolygon1, tpolygon2);
+  // TODO: handle non convex polygons -> turf.intersect returns a multipolygon
   return (intersection != null) ? intersection.geometry.coordinates[0] : [];
 }
 
@@ -150,4 +151,3 @@ export function pointInPolygon(point, polygon) {
   const tpoint = turf.point([point.lat, point.lng]);
   return turf.booleanPointInPolygon(tpoint, tpolygon);
 }
-

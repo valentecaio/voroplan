@@ -154,7 +154,12 @@ function update() {
 function loadStations() {
   let callback = (data) => {
     stations = data.map((station) => {
-      return createStation(station.name, station.lat, station.lng != null ? station.lng : station.lon, 'blue');
+      return createStation(
+        station.name,
+        parseFloat(station.lat),
+        parseFloat(station.lng != null ? station.lng : station.lon),
+        'blue'
+      );
     });
     update();
   }
@@ -207,6 +212,8 @@ function addMarker(point) {
   const icon = new L.Icon({
     iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${point.icon}.png`,
     iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
   });
   const marker = L.marker([point.lat, point.lng], {draggable: true, icon: icon});
   marker.addTo(layer_stations);
@@ -246,7 +253,7 @@ function addMarker(point) {
 
 /*************************
  *
- * CONSTRAINTS
+ * CONSTRAINTS AND OBSTACLES
  *
  *************************/
 
@@ -261,13 +268,20 @@ function applyConstraintsToPoints() {
 
 // apply constraints to the voronoi polygons
 function applyConstraintsToVoronoi() {
-  // remove parts of voronoi polygons outside the outer constraint
+  // clip voronoi polygons to outer polygon
   for (let i = 0; i < voronoiPolygons.length; i++) {
     const new_polygon = gutils.polygonIntersection(voronoiPolygons[i], constraints.outer);
-    voronoiPolygons[i] = new_polygon ? new_polygon : voronoiPolygons[i];
+    if (new_polygon) {
+      if (new_polygon.length < 3) {
+        // TODO: this case only happens when the outer polygon is non convex
+        // console.log('clipped polygon has less than 3 points', new_polygon);
+      } else {
+        voronoiPolygons[i] = new_polygon;
+      }
+    }
   }
 
-  // remove intersections of inner constraints in voronoi polygons
+  // remove intersections of obstacles in voronoi polygons
   for (let i = 0; i < voronoiPolygons.length; i++) {
     for (let j = 0; j < constraints.inner.length; j++) {
       const new_polygon = gutils.polygonMinus(voronoiPolygons[i], constraints.inner[j]);
