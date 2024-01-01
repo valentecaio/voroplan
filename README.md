@@ -13,7 +13,8 @@ For more information, see [the technical report](media/VoroPlan.pdf) and [the de
 
 ![screenvideo2.gif](https://github.com/valentecaio/voroplan/blob/main/media/screenvideo2.gif?raw=true)
 
-### How to execute:
+---
+### How to execute
 To run this project locally, follow the steps outlined below.
 
 1. Install Node.js from [nodejs.org](https://nodejs.org).
@@ -21,7 +22,8 @@ To run this project locally, follow the steps outlined below.
 3. Run the node server: `$ npm run dev`
 4. Access the application at [localhost:5173](http://localhost:5173) in a browser.
 
-### Some examples:
+---
+### Some examples
 
 ![screenvideo1.gif](https://github.com/valentecaio/voroplan/blob/main/media/screenvideo1.gif?raw=true)
 -
