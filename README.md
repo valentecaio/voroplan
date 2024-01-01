@@ -11,8 +11,6 @@ The project is built on Node.js runtime and uses [Leaflet](https://leafletjs.com
 
 For more information, see [the technical report](media/VoroPlan.pdf) and [the demo video](https://drive.google.com/file/d/16eQ6ag3iZrek7HiCUyrd1eWrEeVvus6Z/view?usp=drive_link).  
 
-![screenvideo2.gif](https://github.com/valentecaio/voroplan/blob/main/media/screenvideo2.gif?raw=true)
-
 ---
 ### How to execute
 To run this project locally, follow the steps outlined below.
@@ -25,6 +23,8 @@ To run this project locally, follow the steps outlined below.
 ---
 ### Some examples
 
+![screenvideo2.gif](https://github.com/valentecaio/voroplan/blob/main/media/screenvideo2.gif?raw=true)
+-
 ![screenvideo1.gif](https://github.com/valentecaio/voroplan/blob/main/media/screenvideo1.gif?raw=true)
 -
 ![screenshot3.png](https://github.com/valentecaio/voroplan/blob/main/media/screenshot3.png?raw=true)
