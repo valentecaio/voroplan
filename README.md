@@ -1,7 +1,7 @@
 
 ## VoroPlan
 
-Try it at [valentecaio.ovh/voroplan](https://valentecaio.ovh/voroplan/).  
+Try it at [valentecaio.itch.io/voroplan](https://valentecaio.itch.io/voroplan/).  
 
 ![screenshot2.png](https://github.com/valentecaio/voroplan/blob/main/media/screenshot2.png?raw=true)
 
