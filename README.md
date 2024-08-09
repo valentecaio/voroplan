@@ -21,6 +21,15 @@ To run this project locally, follow the steps outlined below.
 4. Access the application at [localhost:5173](http://localhost:5173) in a browser.
 
 ---
+### How to build
+To build the project, follow the steps below.
+1. Install Node.js from [nodejs.org](https://nodejs.org).
+2. Install the dependencies: `$ npm install`
+3. Run the build script: `$ npm run build`
+4. The build will be available in the `dist/` folder.
+5. Zip the contents of the `dist/` folder and upload it to a server.
+
+---
 ### Some examples
 
 ![screenvideo2.gif](https://github.com/valentecaio/voroplan/blob/main/media/screenvideo2.gif?raw=true)
